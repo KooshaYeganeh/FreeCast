@@ -1,396 +1,61 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-    <title>KYGNus Video Library</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link href="../static/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="../static/assets/css/main.css">
-    <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #3498db;
-            --accent-color: #e74c3c;
-            --light-bg: rgba(248, 249, 250, 0.9); /* Added opacity */
-            --dark-bg: #2c3e50;
-            --text-light: #ecf0f1;
-            --text-dark: #2c3e50;
-        }
-        
-        /* Full page background */
-        body {
-            background-image: url("../static/images/john.jpg");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            min-height: 100vh;
-        }
-        
-        /* Overlay to make content readable */
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.6);
-            z-index: -1;
-        }
-        
-        /* Header adjustments for better visibility */
-        #header {
-            background-color: rgba(44, 62, 80, 0.9);
-        }
-        
-        /* Video library section with semi-transparent background */
-        .video-library {
-            padding: 60px 0;
-            background-color: var(--light-bg);
-            border-radius: 10px;
-            margin: 30px auto;
-            max-width: 95%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-        }
-        
-        /* Text color adjustments for better contrast */
-        .library-title,
-        .library-subtitle,
-        .section-title {
-            color: var(--text-light) !important;
-        }
-        
-        .library-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 2px solid var(--secondary-color);
-        }
-        
-        .library-title {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        
-        .library-subtitle {
-            font-size: 1.2rem;
-            color: var(--text-light);
-        }
-        
-        .folder-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            transition: transform 0.3s, box-shadow 0.3s;
-            margin-bottom: 30px;
-        }
-        
-        .folder-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
-        }
-        
-        .folder-header {
-            background-color: var(--primary-color);
-            color: white;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .folder-icon {
-            font-size: 2rem;
-            margin-right: 15px;
-            color: var(--secondary-color);
-        }
-        
-        .folder-title {
-            font-size: 1.5rem;
-            margin: 0;
-            flex-grow: 1;
-        }
-        
-        .folder-count {
-            background: var(--accent-color);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-        }
-        
-        .folder-contents {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
-        
-        .video-item {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-        }
-        
-        .video-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        }
-        
-        .video-thumbnail {
-            width: 100%;
-            height: 180px;
-            object-fit: cover;
-            background-color: #ddd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #777;
-            font-size: 1.2rem;
-        }
-        
-        .video-info {
-            padding: 15px;
-        }
-        
-        .video-name {
-            font-size: 1.1rem;
-            margin: 0 0 10px 0;
-            color: var(--text-dark);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        
-        .video-play-btn {
-            display: block;
-            width: 100%;
-            padding: 8px;
-            background: var(--secondary-color);
-            color: white;
-            text-align: center;
-            border-radius: 5px;
-            text-decoration: none;
-            transition: background 0.3s;
-        }
-        
-        .video-play-btn:hover {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .root-videos-section {
-            margin-bottom: 50px;
-        }
-        
-        .section-title {
-            font-size: 1.8rem;
-            color: var(--text-light);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--secondary-color);
-        }
-        
-        /* Modal styles */
-        .video-modal .modal-content {
-            border-radius: 0;
-            border: none;
-        }
-        
-        .video-modal .modal-header {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-        }
-        
-        .video-modal .modal-body {
-            padding: 0;
-        }
-        
-        .video-modal .modal-body video {
-            width: 100%;
-        }
-        
-        /* Footer adjustments */
-        #footer {
-            background-color: rgba(44, 62, 80, 0.9);
-            color: white;
-        }
-        
-        .copyright {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .folder-contents {
-                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            }
-            
-            .library-title {
-                font-size: 2rem;
-            }
-            
-            .video-library {
-                margin: 15px auto;
-                padding: 30px 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <!-- Header -->
-    <header id="header" class="alt">
-        <div class="logo"><a href="/">KYGNus <span>Video Library</span></a></div>
-        <a href="#menu">Menu</a>
-    </header>
+{% extends "base.html" %}
 
-    <!-- Nav -->
-    <nav id="menu">
-        <ul class="links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/videos">Video Library</a></li>
-            <li><a href="#about">About</a></li>
-        </ul>
-    </nav>
-
-    <!-- Video Library Section -->
-    <section class="video-library" style="background-image: url(../static/images/john.jpg);background-position: center;background-size: cover;">
-        <div class="container">
-            <div class="library-header">
-                <h1 class="library-title">KYGNus Video Library</h1>
-                <p class="library-subtitle">Browse our complete collection of videos</p>
-            </div>
-            
-            <!-- Root level videos -->
-            {% if video_structure|selectattr('type', 'equalto', 'video')|list %}
-            <div class="root-videos-section">
-                <h2 class="section-title">Videos</h2>
-                <div class="folder-contents">
-                    {% for item in video_structure %}
-                        {% if item.type == 'video' %}
-                        <div class="video-item">
-                            <div class="video-thumbnail">📹 {{ item.name|truncate(20) }}</div>
-                            <div class="video-info">
-                                <h3 class="video-name" title="{{ item.name }}">{{ item.name|truncate(30) }}</h3>
-                                <a href="#" class="video-play-btn" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ item.url }}">
-                                    Play Video
-                                </a>
-                            </div>
-                        </div>
-                        {% endif %}
-                    {% endfor %}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Folders with videos -->
+{% block content %}
+    <!-- Root Level Videos -->
+    {% if video_structure|selectattr('type', 'equalto', 'video')|list %}
+    <div class="folder-section">
+        <h2 class="section-title">Videos</h2>
+        <div class="video-grid">
             {% for item in video_structure %}
-                {% if item.type == 'folder' %}
-                <div class="folder-card">
-                    <div class="folder-header">
-                        <div class="folder-icon">📁</div>
-                        <h2 class="folder-title">{{ item.name }}</h2>
-                        <span class="folder-count">{{ item.count }} videos</span>
+                {% if item.type == 'video' %}
+                <div class="video-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ item.url }}">
+                    <div class="video-thumbnail">
+                        <img src="{{ item.cover }}" alt="{{ item.name }}">
+                        <span class="video-duration">{{ item.duration }}</span>
                     </div>
-                    <div class="folder-contents">
-                        {% for video in item.contents %}
-                        <div class="video-item">
-                            <div class="video-thumbnail">🎬 {{ video.name|truncate(20) }}</div>
-                            <div class="video-info">
-                                <h3 class="video-name" title="{{ video.name }}">{{ video.name|truncate(30) }}</h3>
-                                <a href="#" class="video-play-btn" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ video.url }}">
-                                    Play Video
-                                </a>
-                            </div>
+                    <div class="video-info">
+                        <div class="channel-avatar">
+                            <i class="fas fa-user text-muted d-flex align-items-center justify-content-center h-100"></i>
                         </div>
-                        {% endfor %}
+                        <div class="video-details">
+                            <h3 class="video-title">{{ item.name }}</h3>
+                            <div class="channel-name">KYGNus Channel</div>
+                            <div class="video-meta">{{ format_views(item.views) }} views • {{ format_date(item.upload_date) }}</div>
+                        </div>
                     </div>
                 </div>
                 {% endif %}
             {% endfor %}
         </div>
-    </section>
-
-    <!-- Video Modal -->
-    <div class="modal fade video-modal" id="videoModal" tabindex="-1" aria-labelledby="videoModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="videoModalLabel">Now Playing</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    {% endif %}
+    
+    <!-- Folders with Videos -->
+    {% for item in video_structure %}
+        {% if item.type == 'folder' %}
+        <div class="folder-section" id="folder-{{ loop.index }}">
+            <h2 class="section-title">{{ item.name }} <span class="badge bg-secondary">{{ item.count }} videos</span></h2>
+            <div class="video-grid">
+                {% for video in item.contents %}
+                <div class="video-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ video.url }}">
+                    <div class="video-thumbnail">
+                        <img src="{{ video.cover }}" alt="{{ video.name }}">
+                        <span class="video-duration">{{ video.duration }}</span>
+                    </div>
+                    <div class="video-info">
+                        <div class="channel-avatar">
+                            <i class="fas fa-user text-muted d-flex align-items-center justify-content-center h-100"></i>
+                        </div>
+                        <div class="video-details">
+                            <h3 class="video-title">{{ video.name }}</h3>
+                            <div class="channel-name">KYGNus Channel</div>
+                            <div class="video-meta">{{ format_views(video.views) }} views • {{ format_date(video.upload_date) }}</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <video id="videoPlayer" class="w-100" controls autoplay>
-                        <source id="videoSource" src="" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
+                {% endfor %}
             </div>
         </div>
-    </div>
-
-    <!-- Footer -->
-    <footer id="footer">
-        <div class="container">
-            <ul class="icons">
-                <li><a href="https://github.com/KooshaYeganeh/freeutm" class="icon fa-github"><span class="label">GitHub</span></a></li>
-                <li><a href="https://www.instagram.com/kygnus.co?igsh=cnJtdzEzbjR6c2Fy" class="icon fa-instagram"><span class="label">Instagram</span></a></li>
-                <li><a href="mailto:kooshakooshadv@gmail.com" class="icon fa-envelope-o"><span class="label">Email</span></a></li>
-            </ul>
-        </div>
-    </footer>
-    <div class="copyright">
-        Video Hosting Platform by <a href="https://kooshayeganeh.github.io/">KYGNus</a>
-    </div>
-
-    <!-- Scripts -->
-    <script src="../static/assets/js/jquery.min.js"></script>
-    <script src="../static/assets/js/jquery.scrollex.min.js"></script>
-    <script src="../static/assets/js/skel.min.js"></script>
-    <script src="../static/assets/js/util.js"></script>
-    <script src="../static/assets/js/main.js"></script>
-    <script src="../static/popper.min.js"></script>
-    <script src="../static/bootstrap.min.js"></script>
-    
-    <script>
-        // Video modal functionality
-        const videoModal = document.getElementById('videoModal');
-        if (videoModal) {
-            videoModal.addEventListener('show.bs.modal', function(event) {
-                const button = event.relatedTarget;
-                const videoUrl = button.getAttribute('data-video-url');
-                const videoPlayer = document.getElementById('videoPlayer');
-                const videoSource = document.getElementById('videoSource');
-                
-                // Set video source and load
-                videoSource.src = videoUrl;
-                videoPlayer.load();
-                
-                // Set modal title to video name
-                const videoName = button.closest('.video-info').querySelector('.video-name').getAttribute('title');
-                document.getElementById('videoModalLabel').textContent = videoName;
-            });
-            
-            // Reset video when modal is closed
-            videoModal.addEventListener('hidden.bs.modal', function() {
-                const videoPlayer = document.getElementById('videoPlayer');
-                videoPlayer.pause();
-                videoPlayer.currentTime = 0;
-            });
-        }
-        
-        // Auto-focus search field if present
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchField = document.querySelector('.search-field');
-            if (searchField) {
-                searchField.focus();
-            }
-        });
-    </script>
-</body>
-</html>
+        {% endif %}
+    {% endfor %}
+{% endblock %}

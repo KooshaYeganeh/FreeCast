@@ -1,0 +1,7 @@
+{
+  "1": {
+    "username": "admin",
+    "password_hash": "scrypt:32768:8:1$iyaWgfnAuqmshoAT$6a2677ce36cce50ba3d015fbf9ed3281d4f638408650c7e392f4d956b6f6e7c8e18e0d237a2893f93b7b3692d32a8d59d5411f89233d3ef34930bbfd7b828036",
+    "created_at": "2025-09-23T20:30:32.821527"
+  }
+}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - KYGNus{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Analytics Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card bg-dark text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Views</h5>
+                <h2 class="display-4">{{ total_views }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card bg-dark text-white">
+            <div class="card-body">
+                <h5 class="card-title">Total Videos</h5>
+                <h2 class="display-4">{{ total_videos }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h3 class="section-title">Video Performance</h3>
+<div class="table-responsive">
+    <table class="table table-dark table-striped">
+        <thead>
+            <tr>
+                <th>Video Name</th>
+                <th>Views</th>
+                <th>Upload Date</th>
+                <th>Duration</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in video_structure %}
+                {% if item.type == 'video' %}
+                <tr>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.views }}</td>
+                    <td>{{ item.upload_date }}</td>
+                    <td>{{ item.duration }}</td>
+                </tr>
+                {% elif item.type == 'folder' %}
+                    {% for video in item.contents %}
+                    <tr>
+                        <td>{{ video.name }} ({{ item.name }})</td>
+                        <td>{{ video.views }}</td>
+                        <td>{{ video.upload_date }}</td>
+                        <td>{{ video.duration }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

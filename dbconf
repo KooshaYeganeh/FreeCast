@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Variables
+DB_NAME="kygnus_video_library"
+DB_USER="koosha"
+DB_PASS="K102030k"
+
+# Execute SQL commands
+mysql -u "$DB_USER" -p"$DB_PASS" <<EOF
+CREATE DATABASE IF NOT EXISTS $DB_NAME;
+EOF
+
+echo "Database and user created successfully."
+

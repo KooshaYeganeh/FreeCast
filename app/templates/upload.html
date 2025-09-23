@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Video - KYGNus{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2 class="section-title">Upload Video</h2>
+        
+        <div class="upload-form">
+            <form method="POST" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="file" class="form-label">Select Video File</label>
+                    <input type="file" class="form-control" id="file" name="file" accept="video/*" required>
+                    <div class="form-text">Supported formats: MP4, AVI, MKV, MOV, WebM</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="folder" class="form-label">Folder (Optional)</label>
+                    <select class="form-control" id="folder" name="folder">
+                        <option value="">Root Directory</option>
+                        {% for folder in folders %}
+                            <option value="{{ folder }}">{{ folder }}</option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">Select a folder to organize your video</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="new_folder" class="form-label">Or Create New Folder</label>
+                    <input type="text" class="form-control" id="new_folder" name="new_folder" placeholder="Enter new folder name">
+                </div>
+                
+                <button type="submit" class="btn btn-danger w-100">
+                    <i class="fas fa-upload me-2"></i>Upload Video
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

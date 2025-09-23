@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Content - KYGNus{% endblock %}
+
+{% block content %}
+<h2 class="section-title">Manage Videos</h2>
+
+<div class="video-grid">
+    {% for item in video_structure %}
+        {% if item.type == 'video' %}
+        <div class="video-card">
+            <div class="video-thumbnail">
+                <img src="{{ item.cover }}" alt="{{ item.name }}">
+                <span class="video-duration">{{ item.duration }}</span>
+            </div>
+            <div class="video-info">
+                <div class="video-details">
+                    <h3 class="video-title">{{ item.name }}</h3>
+                    <div class="video-meta">{{ format_views(item.views) }} views • {{ format_date(item.upload_date) }}</div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-outline-danger delete-video" data-video-path="{{ item.name }}">
+                            <i class="fas fa-trash me-1"></i>Delete
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary play-video" data-video-url="{{ item.url }}">
+                            <i class="fas fa-play me-1"></i>Play
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% elif item.type == 'folder' %}
+            {% for video in item.contents %}
+            <div class="video-card">
+                <div class="video-thumbnail">
+                    <img src="{{ video.cover }}" alt="{{ video.name }}">
+                    <span class="video-duration">{{ video.duration }}</span>
+                </div>
+                <div class="video-info">
+                    <div class="video-details">
+                        <h3 class="video-title">{{ video.name }}</h3>
+                        <div class="video-meta">{{ format_views(video.views) }} views • {{ format_date(video.upload_date) }}</div>
+                        <div class="mt-2">
+                            <button class="btn btn-sm btn-outline-danger delete-video" data-video-path="{{ item.name }}/{{ video.name }}">
+                                <i class="fas fa-trash me-1"></i>Delete
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary play-video" data-video-url="{{ video.url }}">
+                                <i class="fas fa-play me-1"></i>Play
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Delete video functionality
+    document.querySelectorAll('.delete-video').forEach(button => {
+        button.addEventListener('click', function() {
+            const videoPath = this.getAttribute('data-video-path');
+            if (confirm('Are you sure you want to delete this video? This action cannot be undone.')) {
+                fetch('/delete_video', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({video_path: videoPath})
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Remove the video card from the page
+                        this.closest('.video-card').style.opacity = '0.5';
+                        setTimeout(() => {
+                            this.closest('.video-card').remove();
+                            // Show success message
+                            showAlert('Video deleted successfully!', 'success');
+                        }, 500);
+                    } else {
+                        showAlert('Error deleting video: ' + (data.error || 'Unknown error'), 'error');
+                    }
+                })
+                .catch(error => {
+                    showAlert('Error deleting video: ' + error, 'error');
+                });
+            }
+        });
+    });
+
+    // Play video functionality
+    document.querySelectorAll('.play-video').forEach(button => {
+        button.addEventListener('click', function() {
+            const videoUrl = this.getAttribute('data-video-url');
+            const videoPlayer = document.getElementById('videoPlayer');
+            const videoSource = document.getElementById('videoSource');
+            const videoModal = new bootstrap.Modal(document.getElementById('videoModal'));
+            
+            // Set video source
+            videoSource.src = videoUrl;
+            videoPlayer.load();
+            
+            // Set modal title
+            const videoTitle = this.closest('.video-card').querySelector('.video-title').textContent;
+            document.getElementById('videoModalLabel').textContent = videoTitle;
+            
+            // Show modal
+            videoModal.show();
+            
+            // Increment views
+            fetch('/increment_views', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({video_path: videoUrl.replace('/videos/', '')})
+            });
+        });
+    });
+
+    // Alert function
+    function showAlert(message, type) {
+        // Remove existing alerts
+        const existingAlerts = document.querySelectorAll('.custom-alert');
+        existingAlerts.forEach(alert => alert.remove());
+        
+        // Create new alert
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type === 'error' ? 'danger' : 'success'} alert-dismissible fade show custom-alert`;
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        // Add to page
+        document.querySelector('.main-content').insertBefore(alertDiv, document.querySelector('.main-content').firstChild);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Search functionality for manage page
+    const searchInput = document.querySelector('.search-input');
+    const videoCards = document.querySelectorAll('.video-card');
+    
+    if (searchInput && videoCards.length > 0) {
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            videoCards.forEach(card => {
+                const title = card.querySelector('.video-title').textContent.toLowerCase();
+                if (title.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
