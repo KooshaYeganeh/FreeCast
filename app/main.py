@@ -35,7 +35,6 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 login_manager.login_message_category = 'error'
-
 # Initialize Flask-Limiter
 limiter = Limiter(
     get_remote_address,
