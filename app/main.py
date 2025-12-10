@@ -207,7 +207,7 @@ def save_metadata(video_path, metadata):
                 VALUES (%s, %s, %s, %s, %s, %s)
             ''', (
                 video_path,
-                metadata.get('cover_image', '../static/images/media.avif'),
+                metadata.get('cover_image', '../static/images/video_player.gif'),
                 metadata.get('views', 0),
                 metadata.get('upload_date', datetime.now().strftime('%Y-%m-%d')),
                 metadata.get('duration', '10:30'),
@@ -235,7 +235,7 @@ def get_video_metadata(video_path):
             return dict(metadata)
         else:
             return {
-                'cover_image': '../static/images/media.avif',
+                'cover_image': '../static/images/video_player.gif',
                 'views': 0,
                 'upload_date': datetime.now().strftime('%Y-%m-%d'),
                 'duration': '10:30'
@@ -243,7 +243,7 @@ def get_video_metadata(video_path):
     except Exception as e:
         print(f"Error getting video metadata: {e}")
         return {
-            'cover_image': '../static/images/media.avif',
+            'cover_image': '../static/images/video_player.gif',
             'views': 0,
             'upload_date': datetime.now().strftime('%Y-%m-%d'),
             'duration': '10:30'
@@ -297,7 +297,7 @@ def get_video_structure(root_folder):
                         folder_contents.append({
                             "name": subitem,
                             "url": f"/videos/{video_rel_path}",
-                            "cover": video_meta.get('cover_image', '../static/images/media.avif'),
+                            "cover": video_meta.get('cover_image', '../static/images/video_player.gif'),
                             "views": video_meta.get('views', 0),
                             "upload_date": video_meta.get('upload_date', datetime.now().strftime('%Y-%m-%d')),
                             "duration": video_meta.get('duration', '10:30')
@@ -316,7 +316,7 @@ def get_video_structure(root_folder):
                     "type": "video",
                     "name": item,
                     "url": f"/videos/{item}",
-                    "cover": video_meta.get('cover_image', '../static/images/media.avif'),
+                    "cover": video_meta.get('cover_image', '../static/images/video_player.gif'),
                     "views": video_meta.get('views', 0),
                     "upload_date": video_meta.get('upload_date', datetime.now().strftime('%Y-%m-%d')),
                     "duration": video_meta.get('duration', '10:30')
