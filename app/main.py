@@ -1,4 +1,4 @@
-from flask import Flask, send_from_directory, render_template, request, redirect, url_for, flash, jsonify
+from flask import Flask, send_from_directory, render_template, request, redirect, url_for, flash, jsonify , make_response
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -88,7 +88,38 @@ def init_db():
                 FOREIGN KEY (uploaded_by) REFERENCES users(id)
             )
         ''')
-        
+
+        # Update the iptv_channels table creation in init_db() function:
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS iptv_channels (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                stream_url VARCHAR(500) NOT NULL,
+                category VARCHAR(100),
+                group_title VARCHAR(100) DEFAULT 'General',
+                logo_url VARCHAR(500),
+                is_live BOOLEAN DEFAULT TRUE,
+                quality VARCHAR(20) DEFAULT 'HD',
+                country_code VARCHAR(10),
+                added_by INT,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active BOOLEAN DEFAULT TRUE,
+                FOREIGN KEY (added_by) REFERENCES users(id)
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS iptv_playlists (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                m3u_content TEXT,
+                created_by INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (created_by) REFERENCES users(id)
+            )
+        ''')
+
+        # ALTER TABLE iptv_channels ADD COLUMN group_title VARCHAR(100) DEFAULT 'General';
         # Create default admin user if not exists
         cursor.execute('SELECT * FROM users WHERE username = %s', ('admin',))
         admin_user = cursor.fetchone()
@@ -617,6 +648,185 @@ def ratelimit_handler(e):
 def unauthorized_handler():
     flash('Please log in to access this page.', 'error')
     return redirect(url_for('login', next=request.url))
+
+
+
+
+
+# IPTV Routes
+@app.route("/iptv")
+def iptv_home():
+    """Main IPTV dashboard"""
+    if not current_user.is_authenticated:
+        return redirect(url_for('login'))
+    
+    # Get active channels
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT c.*, u.username as added_by_name 
+            FROM iptv_channels c 
+            LEFT JOIN users u ON c.added_by = u.id 
+            WHERE c.is_active = TRUE 
+            ORDER BY c.category, c.name
+        ''')
+        channels = cursor.fetchall()
+        
+        # Group by category
+        channels_by_category = {}
+        for channel in channels:
+            category = channel['category'] or 'Uncategorized'
+            if category not in channels_by_category:
+                channels_by_category[category] = []
+            channels_by_category[category].append(channel)
+        
+        cursor.close()
+        conn.close()
+        
+        return render_template("iptv.html", 
+                             channels_by_category=channels_by_category,
+                             categories=channels_by_category.keys())
+    except Exception as e:
+        print(f"Error loading IPTV channels: {e}")
+        return render_template("iptv.html", channels_by_category={})
+
+@app.route("/iptv/play/<int:channel_id>")
+@login_required
+def iptv_play(channel_id):
+    """Play IPTV stream"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM iptv_channels WHERE id = %s AND is_active = TRUE', (channel_id,))
+        channel = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if channel:
+            return render_template("iptv_player.html", channel=channel)
+        else:
+            flash('Channel not found or inactive', 'error')
+            return redirect(url_for('iptv_home'))
+    except Exception as e:
+        print(f"Error playing channel: {e}")
+        flash('Error loading channel', 'error')
+        return redirect(url_for('iptv_home'))
+
+@app.route("/iptv/stream/<int:channel_id>")
+@login_required
+@limiter.limit("100 per minute")
+def iptv_stream(channel_id):
+    """Proxy stream or redirect to actual stream URL"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT stream_url FROM iptv_channels WHERE id = %s AND is_active = TRUE', (channel_id,))
+        channel = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        
+        if channel:
+            # Redirect to the actual stream URL
+            return redirect(channel['stream_url'])
+        return jsonify({'error': 'Channel not found or inactive'}), 404
+    except Exception as e:
+        print(f"Error getting stream: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+
+@app.route("/iptv/manage", methods=['GET', 'POST'])
+@login_required
+def iptv_manage():
+    """Manage IPTV channels"""
+    if request.method == 'POST':
+        name = request.form.get('name')
+        stream_url = request.form.get('stream_url')
+        category = request.form.get('category')
+        logo_url = request.form.get('logo_url', '')
+        
+        if not name or not stream_url:
+            flash('Name and stream URL are required', 'error')
+            return redirect(url_for('iptv_manage'))
+        
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO iptv_channels (name, stream_url, category, logo_url, added_by)
+                VALUES (%s, %s, %s, %s, %s)
+            ''', (name, stream_url, category, logo_url, current_user.id))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            
+            flash('Channel added successfully!', 'success')
+            return redirect(url_for('iptv_manage'))
+        except Exception as e:
+            print(f"Error adding channel: {e}")
+            flash('Error adding channel', 'error')
+    
+    # Get all channels for management
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT c.*, u.username as added_by_name 
+            FROM iptv_channels c 
+            LEFT JOIN users u ON c.added_by = u.id 
+            ORDER BY c.created_at DESC
+        ''')
+        channels = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        return render_template("iptv_manage.html", channels=channels)
+    except Exception as e:
+        print(f"Error loading channels: {e}")
+        return render_template("iptv_manage.html", channels=[])
+
+
+
+@app.route("/iptv/generate_m3u")
+@login_required
+def generate_m3u():
+    """Generate M3U playlist for IPTV players"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('''
+            SELECT id, name, stream_url, logo_url, category 
+            FROM iptv_channels 
+            WHERE is_active = TRUE 
+            ORDER BY category, name
+        ''')
+        channels = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Build M3U content
+        m3u_content = "#EXTM3U\n"
+        for channel in channels:
+            logo_url = channel['logo_url'] or ''
+            category = channel['category'] or 'General'
+            
+            # Format the EXTINF line
+            m3u_content += f"#EXTINF:-1 tvg-logo=\"{logo_url}\" group-title=\"{category}\",{channel['name']}\n"
+            
+            # Use the proxy endpoint for better compatibility
+            m3u_content += f"{request.host_url.rstrip('/')}/iptv/stream/{channel['id']}\n"
+        
+        response = make_response(m3u_content)
+        response.headers['Content-Type'] = 'audio/x-mpegurl'
+        response.headers['Content-Disposition'] = f'attachment; filename="kygnus_iptv_{datetime.now().strftime("%Y%m%d")}.m3u"'
+        return response
+    except Exception as e:
+        print(f"Error generating M3U: {e}")
+        flash('Failed to generate playlist', 'error')
+        return redirect(url_for('iptv_home'))
+
+
 
 if __name__ == "__main__":
     init_db()  # Initialize database tables

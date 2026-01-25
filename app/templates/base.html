@@ -417,6 +417,7 @@
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li><a class="dropdown-item" href="{{ url_for('index') }}"><i class="fas fa-user me-2"></i>Profile</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('manage') }}"><i class="fas fa-cog me-2"></i>Manage</a></li>
+
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
@@ -452,7 +453,18 @@
             <i class="fas fa-chart-bar"></i>
             <span>Analytics</span>
         </a>
-        
+            <a href="{{ url_for('iptv_home') }}" class="sidebar-item">
+        <i class="fas fa-tv"></i>
+        <span>Live IPTV</span>
+    </a>
+    <a href="{{ url_for('iptv_manage') }}" class="sidebar-item">
+        <i class="fas fa-sliders-h"></i>
+        <span>Manage IPTV</span>
+    </a>
+    <a href="{{ url_for('generate_m3u') }}" class="sidebar-item">
+        <i class="fas fa-download"></i>
+        <span>Download M3U</span>
+    </a>
         <div class="sidebar-divider"></div>
         
         <div class="sidebar-item text">

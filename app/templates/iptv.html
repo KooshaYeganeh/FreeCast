@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}KYGNus IPTV{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="text-white">Live IPTV Channels</h1>
+        <div>
+            <a href="{{ url_for('iptv_manage') }}" class="btn btn-outline-light me-2">
+                <i class="fas fa-cog"></i> Manage
+            </a>
+            <a href="{{ url_for('generate_m3u') }}" class="btn btn-danger">
+                <i class="fas fa-download"></i> Download M3U
+            </a>
+        </div>
+    </div>
+
+    {% for category, channels in channels_by_category.items() %}
+    <div class="mb-5">
+        <h2 class="section-title">{{ category }} <span class="badge bg-secondary">{{ channels|length }} channels</span></h2>
+        
+        <div class="row">
+            {% for channel in channels %}
+            <div class="col-xl-3 col-lg-4 col-md-6 col-sm-12 mb-4">
+                <div class="card channel-card bg-dark border-secondary">
+                    <div class="channel-logo p-3 text-center">
+                        {% if channel.logo_url %}
+                        <img src="{{ channel.logo_url }}" alt="{{ channel.name }}" class="img-fluid rounded" style="max-height: 100px;">
+                        {% else %}
+                        <div class="bg-secondary rounded d-flex align-items-center justify-content-center" style="height: 100px;">
+                            <i class="fas fa-tv fa-3x text-light"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title text-white">{{ channel.name }}</h5>
+                        <p class="card-text text-muted small">
+                            <i class="fas fa-globe me-1"></i> {{ channel.country_code or 'International' }}
+                            <br>
+                            <i class="fas fa-signal me-1"></i> {{ channel.quality }}
+                            {% if channel.is_live %}
+                            <span class="badge bg-danger ms-2">LIVE</span>
+                            {% endif %}
+                        </p>
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('iptv_play', channel_id=channel.id) }}" 
+                               class="btn btn-sm btn-danger">
+                                <i class="fas fa-play"></i> Watch Now
+                            </a>
+                            <small class="text-muted align-self-center">
+                                Added by {{ channel.added_by_name }}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="fas fa-tv fa-5x text-muted mb-3"></i>
+        <h3 class="text-white">No IPTV channels available</h3>
+        <p class="text-muted">Add channels through the management panel</p>
+        <a href="{{ url_for('iptv_manage') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add First Channel
+        </a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+.channel-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+.channel-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(255, 0, 0, 0.2);
+    border-color: #ff0000 !important;
+}
+.channel-logo {
+    background: linear-gradient(135deg, #202020 0%, #303030 100%);
+}
+</style>
+{% endblock %}
