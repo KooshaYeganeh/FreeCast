@@ -1,61 +1,110 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <!-- Root Level Videos -->
-    {% if video_structure|selectattr('type', 'equalto', 'video')|list %}
-    <div class="folder-section">
-        <h2 class="section-title">Videos</h2>
-        <div class="video-grid">
-            {% for item in video_structure %}
-                {% if item.type == 'video' %}
-                <div class="video-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ item.url }}">
-                    <div class="video-thumbnail">
-                        <img src="{{ item.cover }}" alt="{{ item.name }}">
-                        <span class="video-duration">{{ item.duration }}</span>
-                    </div>
-                    <div class="video-info">
-                        <div class="channel-avatar">
-                            <i class="fas fa-user text-muted d-flex align-items-center justify-content-center h-100"></i>
-                        </div>
-                        <div class="video-details">
-                            <h3 class="video-title">{{ item.name }}</h3>
-                            <div class="channel-name">KYGNus Channel</div>
-                            <div class="video-meta">{{ format_views(item.views) }} views • {{ format_date(item.upload_date) }}</div>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
+<div class="d-flex justify-content-between align-items-end mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1">Asset Library</h1>
+        <p class="text-muted small mb-0">Manage and review your organization's digital media assets.</p>
     </div>
-    {% endif %}
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-list me-1"></i> List</button>
+        <button class="btn btn-sm btn-ent-primary"><i class="fas fa-th-large me-1"></i> Grid</button>
+    </div>
+</div>
+
+{% set root_videos = video_structure|selectattr('type', 'equalto', 'video')|list %}
+{% if root_videos %}
+<section class="mb-5">
+    <div class="d-flex align-items-center mb-3">
+        <i class="fas fa-file-video text-primary me-2"></i>
+        <h5 class="mb-0 fw-semibold">Uncategorized Assets</h5>
+        <span class="ms-3 badge bg-dark text-muted border border-secondary">{{ root_videos|length }} Files</span>
+    </div>
     
-    <!-- Folders with Videos -->
-    {% for item in video_structure %}
-        {% if item.type == 'folder' %}
-        <div class="folder-section" id="folder-{{ loop.index }}">
-            <h2 class="section-title">{{ item.name }} <span class="badge bg-secondary">{{ item.count }} videos</span></h2>
-            <div class="video-grid">
-                {% for video in item.contents %}
-                <div class="video-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ video.url }}">
-                    <div class="video-thumbnail">
-                        <img src="{{ video.cover }}" alt="{{ video.name }}">
-                        <span class="video-duration">{{ video.duration }}</span>
-                    </div>
-                    <div class="video-info">
-                        <div class="channel-avatar">
-                            <i class="fas fa-user text-muted d-flex align-items-center justify-content-center h-100"></i>
-                        </div>
-                        <div class="video-details">
-                            <h3 class="video-title">{{ video.name }}</h3>
-                            <div class="channel-name">KYGNus Channel</div>
-                            <div class="video-meta">{{ format_views(video.views) }} views • {{ format_date(video.upload_date) }}</div>
-                        </div>
+    <div class="row g-4">
+        {% for item in root_videos %}
+        <div class="col-xl-3 col-lg-4 col-md-6">
+            <div class="asset-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ item.url }}">
+                <div class="asset-thumb">
+                    <img src="{{ item.cover }}" class="w-100 h-100 object-fit-cover" alt="{{ item.name }}">
+                    <span class="badge-status">
+                        <i class="fas fa-clock me-1"></i> {{ item.duration }}
+                    </span>
+                    <div class="position-absolute bottom-0 start-0 p-2 w-100 bg-gradient-dark d-flex justify-content-between">
+                        <span class="badge bg-primary" style="font-size: 0.6rem;">MP4</span>
+                        <span class="text-white" style="font-size: 0.7rem;"><i class="fas fa-eye me-1"></i>{{ format_views(item.views) }}</span>
                     </div>
                 </div>
-                {% endfor %}
+                <div class="asset-body">
+                    <h6 class="asset-title text-white mb-1" title="{{ item.name }}">{{ item.name }}</h6>
+                    <div class="asset-meta">
+                        <span><i class="far fa-calendar-alt me-1"></i> {{ format_date(item.upload_date) }}</span>
+                        <span class="text-accent">Ready <i class="fas fa-check-circle ms-1"></i></span>
+                    </div>
+                </div>
             </div>
         </div>
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+{% for item in video_structure %}
+    {% if item.type == 'folder' %}
+    <section class="mb-5" id="folder-{{ loop.index }}">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-folder-open text-warning me-2 fs-4"></i>
+                <h5 class="mb-0 fw-semibold text-white">{{ item.name }}</h5>
+                <span class="ms-3 badge rounded-pill bg-secondary" style="font-size: 0.7rem;">{{ item.count }} Assets</span>
+            </div>
+            <a href="#" class="btn btn-link btn-sm text-muted text-decoration-none">View All <i class="fas fa-chevron-right ms-1"></i></a>
+        </div>
+        
+        <div class="row g-4">
+            {% for video in item.contents %}
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="asset-card" data-bs-toggle="modal" data-bs-target="#videoModal" data-video-url="{{ video.url }}">
+                    <div class="asset-thumb">
+                        <img src="{{ video.cover }}" class="w-100 h-100 object-fit-cover" alt="{{ video.name }}">
+                        <span class="badge-status">
+                             {{ video.duration }}
+                        </span>
+                    </div>
+                    <div class="asset-body">
+                        <h6 class="asset-title text-white mb-1">{{ video.name }}</h6>
+                        <div class="asset-meta">
+                            <span><i class="fas fa-hdd me-1"></i> {{ format_views(video.views) }} logs</span>
+                            <span class="text-muted">{{ format_date(video.upload_date) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+{% endfor %}
+
+{% if not video_structure %}
+<div class="text-center py-5 border border-dashed border-secondary rounded-4">
+    <i class="fas fa-inbox fs-1 text-muted mb-3"></i>
+    <h5 class="text-muted">No media assets found</h5>
+    <p class="small text-muted mb-4">Initialize the library by uploading your first organizational media file.</p>
+    <a href="{{ url_for('upload') }}" class="btn btn-ent-primary">Inbound Ingest</a>
+</div>
+{% endif %}
+
+<style>
+    /* Specific overrides for this content page */
+    .bg-gradient-dark {
+        background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    }
+    .text-accent {
+        color: var(--ent-accent);
+    }
+    .border-dashed {
+        border-style: dashed !important;
+    }
+</style>
 {% endblock %}
